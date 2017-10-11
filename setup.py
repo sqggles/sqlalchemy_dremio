@@ -12,7 +12,8 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'Click>=6.0',
+    'pyodbc>=4.0.17',
+    'sqlalchemy>=1.1.14'
     # TODO: put package requirements here
 ]
 
@@ -36,8 +37,9 @@ setup(
     url='https://github.com/uhjish/sqlalchemy_dremio',
     packages=find_packages(include=['sqlalchemy_dremio']),
     entry_points={
-        'console_scripts': [
-            'sqlalchemy_dremio=sqlalchemy_dremio.cli:main'
+        'sqlalchemy.dialects': [
+            'dremio = sqlalchemy_dremio.pyodbc:DremioDialect_pyodbc',
+            'dremio.pyodbc = sqlalchemy_dremio.pyodbc.DremioDialect_pyodbc',
         ]
     },
     include_package_data=True,
