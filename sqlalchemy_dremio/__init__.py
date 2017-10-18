@@ -15,12 +15,7 @@ __version__ = '0.1.0'
 # TODO: figure out how to handle DOUBLE properly
 # TODO: figure out how to deal with LIST and MAP types
 
-from .types import DECIMAL, TIME, TIMESTAMP, VARBINARY, VARCHAR
-from sqlalchemy.sql.sqltypes import (Boolean, Date, Float, Interval,
-                                     Integer, BigInteger)
-__version__ = '0.0.7'
+from sqlalchemy.dialects import registry
 
-__all__ = (Boolean, Date, Float, 
-           Interval, Integer, BigInteger,
-           DECIMAL, TIME, TIMESTAMP, VARCHAR)
-
+registry.register("access", "sqlalchemy_access.pyodbc", "AccessDialect_pyodbc")
+registry.register("access.pyodbc", "sqlalchemy_access.pyodbc", "AccessDialect_pyodbc")
