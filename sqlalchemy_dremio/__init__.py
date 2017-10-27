@@ -17,5 +17,5 @@ __version__ = '0.1.0'
 
 from sqlalchemy.dialects import registry
 
-registry.register("access", "sqlalchemy_access.pyodbc", "AccessDialect_pyodbc")
-registry.register("access.pyodbc", "sqlalchemy_access.pyodbc", "AccessDialect_pyodbc")
+registry.register("dremio", "sqlalchemy_dremio.pyodbc", "DremioDialect_pyodbc")
+registry.register("dremio.pyodbc", "sqlalchemy_dremio.pyodbc", "DremioDialect_pyodbc")
