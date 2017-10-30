@@ -25,6 +25,7 @@ from .base import DremioExecutionContext, DremioDialect
 from sqlalchemy.connectors.pyodbc import PyODBCConnector
 from sqlalchemy import types as sqltypes, util
 import decimal
+import platform
 
 class _DremioNumeric_pyodbc(sqltypes.Numeric):
     """Turns Decimals with adjusted() < 0 or > 7 into strings.
@@ -95,10 +96,15 @@ class DremioExecutionContext_pyodbc(DremioExecutionContext):
 
 
 class DremioDialect_pyodbc(PyODBCConnector, DremioDialect):
-
     execution_ctx_cls = DremioExecutionContext_pyodbc
-
-    pyodbc_driver_name = 'Dremio'
+    driver_for_platf = {
+            'Linux 64bit': 'Dremio ODBC Driver 64-bit',
+            'Linux 32bit': 'Dremio ODBC Driver 32-bit',
+            'Windows' : 'Dremio Connector',
+            'Darwin': 'Dremio ODBC Driver'
+    }
+    platf = platform.system() + (' ' + platform.architecture()[0] if platform.system() == 'Linux' else '')
+    pyodbc_driver_name = driver_for_platf[platf]
 
     colspecs = util.update_copy(
         DremioDialect.colspecs,
