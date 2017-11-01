@@ -14,10 +14,12 @@ Support for the Dremio database.
 from sqlalchemy import sql, schema, types, exc, pool
 from sqlalchemy.sql import compiler, expression
 from sqlalchemy.engine import default, base, reflection
+from sqlalchemy.engine import url as sa_url
 from sqlalchemy import processors
 from sqlalchemy import VARCHAR, INTEGER, FLOAT, DATE, TIMESTAMP, TIME, Interval, DECIMAL, LargeBinary, BIGINT, SMALLINT
 import sqlalchemy
 import platform
+import re
 
 _type_map = {
     'boolean': types.BOOLEAN,
@@ -77,50 +79,85 @@ class DremioCompiler(compiler.SQLCompiler):
 
 class DremioDDLCompiler(compiler.DDLCompiler):
     def get_column_specification(self, column, **kwargs):
-        if column.table is None:
-            raise exc.CompileError(
-                            "dremio requires Table-bound columns "
-                            "in order to generate DDL")
-
         colspec = self.preparer.format_column(column)
-        seq_col = column.table._autoincrement_column
-        if seq_col is column:
-            colspec += " AUTOINCREMENT"
+        colspec += " " + self.dialect.type_compiler.process(column.type)
+        if column is column.table._autoincrement_column and \
+            True and \
+            (
+                column.default is None or \
+                isinstance(column.default, schema.Sequence)
+            ):
+            colspec += " IDENTITY"
+            if isinstance(column.default, schema.Sequence) and \
+                column.default.start > 0:
+                colspec += " " + str(column.default.start)
         else:
-            colspec += " " + self.dialect.type_compiler.process(column.type)
-
-            if column.nullable is not None and not column.primary_key:
-                if not column.nullable or column.primary_key:
-                    colspec += " NOT NULL"
-                else:
-                    colspec += " NULL"
-
             default = self.get_column_default_string(column)
             if default is not None:
                 colspec += " DEFAULT " + default
 
+        if not column.nullable:
+            colspec += " NOT NULL"
         return colspec
-
-    def visit_drop_index(self, drop):
-        index = drop.element
-        self.append("\nDROP INDEX [%s].[%s]" % \
-                        (index.table.name,
-                        self._index_identifier(index.name)))
 
 class DremioIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = compiler.RESERVED_WORDS.copy()
-    reserved_words.update(['value', 'text'])
+    dremio_reserved = {'abs', 'all', 'allocate', 'allow', 'alter', 'and', 'any', 'are', 'array', 
+    'array_max_cardinality', 'as', 'asensitivelo', 'asymmetric', 'at', 'atomic', 'authorization', 
+    'avg', 'begin', 'begin_frame', 'begin_partition', 'between', 'bigint', 'binary', 'bit', 'blob',
+    'boolean', 'both', 'by', 'call', 'called', 'cardinality', 'cascaded', 'case', 'cast', 'ceil',
+    'ceiling', 'char', 'char_length', 'character', 'character_length', 'check', 'classifier', 
+    'clob', 'close', 'coalesce', 'collate', 'collect', 'column', 'commit', 'condition', 'connect', 
+    'constraint', 'contains', 'convert', 'corr', 'corresponding', 'count', 'covar_pop', 
+    'covar_samp', 'create', 'cross', 'cube', 'cume_dist', 'current', 'current_catalog', 
+    'current_date', 'current_default_transform_group', 'current_path', 'current_role', 
+    'current_row', 'current_schema', 'current_time', 'current_timestamp', 
+    'current_transform_group_for_type', 'current_user', 'cursor', 'cycle', 'date', 'day', 
+    'deallocate', 'dec', 'decimal', 'declare', 'default', 'define', 'delete', 'dense_rank', 
+    'deref', 'describe', 'deterministic', 'disallow', 'disconnect', 'distinct', 'double', 'drop',
+    'dynamic', 'each', 'element', 'else', 'empty', 'end', 'end-exec', 'end_frame', 'end_partition',
+    'equals', 'escape', 'every', 'except', 'exec', 'execute', 'exists', 'exp', 'explain', 'extend',
+    'external', 'extract', 'false', 'fetch', 'filter', 'first_value', 'float', 'floor', 'for', 
+    'foreign', 'frame_row', 'free', 'from', 'full', 'function', 'fusion', 'get', 'global', 'grant',
+    'group', 'grouping', 'groups', 'having', 'hold', 'hour', 'identity', 'import', 'in', 
+    'indicator', 'initial', 'inner', 'inout', 'insensitive', 'insert', 'int', 'integer', 
+    'intersect', 'intersection', 'interval', 'into', 'is', 'join', 'lag', 'language', 'large', 
+    'last_value', 'lateral', 'lead', 'leading', 'left', 'like', 'like_regex', 'limit', 'ln', 
+    'local', 'localtime', 'localtimestamp', 'lower', 'match', 'matches', 'match_number', 
+    'match_recognize', 'max', 'measures', 'member', 'merge', 'method', 'min', 'minute', 'mod', 
+    'modifies', 'module', 'month', 'more', 'multiset', 'national', 'natural', 'nchar', 'nclob', 
+    'new', 'next', 'no', 'none', 'normalize', 'not', 'nth_value', 'ntile', 'null', 'nullif', 
+    'numeric', 'occurrences_regex', 'octet_length', 'of', 'offset', 'old', 'omit', 'on', 'one', 
+    'only', 'open', 'or', 'order', 'out', 'outer', 'over', 'overlaps', 'overlay', 'parameter', 
+    'partition', 'pattern', 'per', 'percent', 'percentile_cont', 'percentile_disc', 'percent_rank',
+    'period', 'permute', 'portion', 'position', 'position_regex', 'power', 'precedes', 'precision',
+    'prepare', 'prev', 'primary', 'procedure', 'range', 'rank', 'reads', 'real', 'recursive', 
+    'ref', 'references', 'referencing', 'regr_avgx', 'regr_avgy', 'regr_count', 'regr_intercept', 
+    'regr_r2', 'regr_slope', 'regr_sxx', 'regr_sxy', 'regr_syy', 'release', 'reset', 'result', 
+    'return', 'returns', 'revoke', 'right', 'rollback', 'rollup', 'row', 'row_number', 'rows', 
+    'running', 'savepoint', 'scope', 'scroll', 'search', 'second', 'seek', 'select', 'sensitive', 
+    'session_user', 'set', 'minus', 'show', 'similar', 'skip', 'smallint', 'some', 'specific', 
+    'specifictype', 'sql', 'sqlexception', 'sqlstate', 'sqlwarning', 'sqrt', 'start', 'static', 
+    'stddev_pop', 'stddev_samp', 'stream', 'submultiset', 'subset', 'substring', 'substring_regex',
+    'succeeds', 'sum', 'symmetric', 'system', 'system_time', 'system_user', 'table', 'tablesample',
+    'then', 'time', 'timestamp', 'timezone_hour', 'timezone_minute', 'tinyint', 'to', 'trailing', 
+    'translate', 'translate_regex', 'translation', 'treat', 'trigger', 'trim', 'trim_array', 
+    'true', 'truncate', 'uescape', 'union', 'unique', 'unknown', 'unnest', 'update', 'upper', 
+    'upsert', 'user', 'using', 'value', 'values', 'value_of', 'var_pop', 'var_samp', 'varbinary',
+    'varchar', 'varying', 'versioning', 'when', 'whenever', 'where', 'width_bucket', 'window', 
+    'with', 'within', 'without', 'year'}
+    
+    dremio_unique = dremio_reserved - reserved_words
+    reserved_words.update(list(dremio_unique))
+    
     def __init__(self, dialect):
         super(DremioIdentifierPreparer, self).\
                 __init__(dialect, initial_quote='[', final_quote=']')
-
-
 
 class DremioDialect(default.DefaultDialect):
     name = 'dremio'
     supports_sane_rowcount = False
     supports_sane_multi_rowcount = False
-
     poolclass = pool.SingletonThreadPool
     statement_compiler = DremioCompiler
     ddl_compiler = DremioDDLCompiler
@@ -132,24 +169,36 @@ class DremioDialect(default.DefaultDialect):
         import pyodbc as module
         return module
 
-    def create_connect_args(self, url):
-        opts = url.translate_connect_args()
-        driver_for_platf = {
-            'Linux 64bit': 'Dremio ODBC Driver 64-bit',
-            'Linux 32bit': 'Dremio ODBC Driver 32-bit',
-            'Windows' : 'Dremio Connector',
-            'Darwin': 'Dremio ODBC Driver'
-        }
-        platf = platform.system() + ' ' + (platform.architecture()[0] if platform.system() == 'Linux' else '')
-        drv = driver_for_platf[platf]
-        connectors = ['Driver=%s' % drv]
-        connectors.append('ConnectionType=Direct')
-        connectors.append('HOST=%s' % opts.get('host', ''))
-        connectors.append('PORT=%s' % opts.get('port', ''))
-        connectors.append('AuthenticationType=Plain')
-        connectors.append('UID=%s' % opts.get('username', ''))
-        connectors.append('PWD=%s' % opts.get('password', ''))
-        return [[';'.join(connectors)], {}]
+    def connect(self, *cargs, **cparams):
+        sa_args = cargs[0].split(';')
+        engine_args = [arg for arg in sa_args]
+        engine_params = [param.lower() for param in cparams.keys()]
+
+        if 'autocommit' not in engine_params:
+            cparams['autocommit'] = 1
+        
+        clean_args = engine_args
+        
+        dsn_regex = re.compile("dsn=.*", re.IGNORECASE)
+        if list(filter(dsn_regex.match, engine_args)):
+            extra_params_regex = re.compile('(host=|port=|schema=).*', re.IGNORECASE)
+            clean_args = [arg for arg in engine_args if not extra_params_regex.match(arg)]
+        
+        auth_regex = re.compile('authenticationtype=.*', re.IGNORECASE)
+        cnx_regex = re.compile('connectiontype=.*', re.IGNORECASE)
+        trusted_regex = re.compile('trusted_connection=yes', re.IGNORECASE)
+
+        if not list(filter(auth_regex.match, clean_args)):
+            clean_args.append('AuthenticationType=Plain')
+        if not list(filter(cnx_regex.match, clean_args)):
+            clean_args.append('ConnectionType=Direct')
+        if list(filter(trusted_regex.match, engine_args)):
+            clean_args.append('UID=admin')
+            clean_args.append('PWD=password1')
+
+        cargs = tuple([';'.join(clean_args)], )
+
+        return self.dbapi.connect(*cargs, **cparams)
 
     def last_inserted_ids(self):
         return self.context.last_inserted_ids
@@ -161,6 +210,24 @@ class DremioDialect(default.DefaultDialect):
                             "name=:name"), name=tablename
                         )
         return bool(result)
+
+    def get_columns(self, connection, table_name, schema=None, **kw):
+        q = "DESCRIBE %(table_id)s" % ({"table_id": table_name})
+        cursor = connection.execute(q)
+        result = []
+        for col in cursor:
+            cname = col[0]
+            ctype = _type_map[col[1]]
+            bisnull = True
+            column = {
+                "name": cname,
+                "type": ctype,
+                "default": None,
+                "autoincrement": None,
+                "nullable": bisnull,
+            }
+            result.append(column)
+        return(result)
 
     @reflection.cache
     def get_table_names(self, connection, schema=None, **kw):
