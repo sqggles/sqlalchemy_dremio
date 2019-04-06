@@ -28,7 +28,7 @@ test_requirements = [
 ]
 
 setup(
-    name='dremio',
+    name='sqlalchemy_dremio',
     version='0.2.0',
     description="An SQLAlchemy dialect for Dremio which simply wraps the PyODBC Dremio interface.",
     long_description=readme + '\n\n' + history,
