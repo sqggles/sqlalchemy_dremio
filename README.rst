@@ -79,6 +79,9 @@ Use the following syntax to add dremio as a source:
 ```dremio+pyodbc://<username>:<password>@<host>:31010/dremio```
 
 
+![sqllab](https://github.com/naren-dremio/sqlalchemy_dremio/raw/master/sqllab.png)
+![cols](https://github.com/naren-dremio/sqlalchemy_dremio/raw/master/cols.png)
+
 Credits
 ---------
 
