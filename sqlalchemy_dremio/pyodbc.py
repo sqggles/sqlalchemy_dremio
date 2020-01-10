@@ -104,7 +104,7 @@ class DremioDialect_pyodbc(PyODBCConnector, DremioDialect):
         'Linux 64bit': '/opt/dremio-odbc/lib64/libdrillodbc_sb64.so',
         'Linux 32bit': '/opt/dremio-odbc/lib32/libdrillodbc_sb32.so',
         'Windows' : 'Dremio Connector',
-        'Darwin': 'Dremio ODBC Driver'
+        'Darwin': 'Dremio Connector'
     }
     platf = platform.system() + (' ' + platform.architecture()[0] if platform.system() == 'Linux' else '')
     drv = driver_for_platf[platf]

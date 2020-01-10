@@ -9,7 +9,6 @@
 """
 Support for the Dremio database.
 
-
 """
 from sqlalchemy import sql, schema, types, exc, pool
 from sqlalchemy.sql import compiler, expression
@@ -46,11 +45,11 @@ _type_map = {
     'TIME': types.TIME,
     'timestamp': types.TIMESTAMP,
     'TIMESTAMP': types.TIMESTAMP,
-    'varchar': types.String,
-    'VARCHAR': types.String,
+    'varchar': types.VARCHAR,
+    'VARCHAR': types.VARCHAR,
     'smallint': types.SMALLINT,
-    'CHARACTER VARYING': types.String,
-    'ANY': types.String
+    'CHARACTER VARYING': types.VARCHAR,
+    'ANY': types.VARCHAR
 }
 
 class DremioExecutionContext(default.DefaultExecutionContext):
@@ -65,10 +64,10 @@ class DremioCompiler(compiler.SQLCompiler):
 
         if asfrom:
             if table.schema != "":
-                fixed_schema = ".".join(["`" + i.replace('`', '') + "`" for i in table.schema.split(".")])
-                fixed_table = fixed_schema + ".`" + table.name.replace("`", "") + "`"
+                fixed_schema = ".".join(["\"" + i.replace('"', '') + "\"" for i in table.schema.split(".")])
+                fixed_table = fixed_schema + ".\"" + table.name.replace("\"", "") + "\""
             else:
-                fixed_table = "`" + table.name.replace("`", "") + "`"
+                fixed_table = "\"" + table.name.replace("\"", "") + "\""
             return fixed_table
         else:
             return ""
@@ -152,7 +151,7 @@ class DremioIdentifierPreparer(compiler.IdentifierPreparer):
     
     def __init__(self, dialect):
         super(DremioIdentifierPreparer, self).\
-                __init__(dialect, initial_quote='[', final_quote=']')
+                __init__(dialect, initial_quote='"', final_quote='"')
 
 class DremioDialect(default.DefaultDialect):
     name = 'dremio'
@@ -203,16 +202,18 @@ class DremioDialect(default.DefaultDialect):
     def last_inserted_ids(self):
         return self.context.last_inserted_ids
 
-    def has_table(self, connection, tablename, schema=None):
-        result = connection.scalar(
-                        sql.text(
-                            "select * from INFORMATION_SCHEMA.`TABLES` where "
-                            "name=:name"), name=tablename
-                        )
-        return bool(result)
+    def get_indexes(self, connection, table_name, schema, **kw):
+        return []
 
-    def get_columns(self, connection, table_name, schema=None, **kw):
-        q = "DESCRIBE %(table_id)s" % ({"table_id": table_name})
+    def get_pk_constraint(self, connection, table_name, schema=None, **kw):
+        return []
+
+    def get_foreign_keys(self, connection, table_name, schema=None, **kw):
+        return []
+
+    def get_columns(self, connection, table_name, schema, **kw):
+
+        q = "DESCRIBE \"{0}\".\"{1}\"".format(schema,table_name)
         cursor = connection.execute(q)
         result = []
         for col in cursor:
@@ -223,14 +224,23 @@ class DremioDialect(default.DefaultDialect):
                 "name": cname,
                 "type": ctype,
                 "default": None,
-                "autoincrement": None,
-                "nullable": bisnull,
+                "comment": None,
+                "nullable": True 
             }
             result.append(column)
         return(result)
 
     @reflection.cache
-    def get_table_names(self, connection, schema=None, **kw):
-        result = connection.execute("SHOW TABLES FROM INFORMATION_SCHEMA")
+    def get_table_names(self, connection, schema, **kw):
+        sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES"'
+        if schema is not None:
+            sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.\"TABLES\" WHERE TABLE_SCHEMA = '" + schema + "'"
+
+        result = connection.execute(sql)
         table_names = [r[0] for r in result]
         return table_names
+
+    def get_schema_names(self, connection, schema=None, **kw):
+        result = connection.execute("SHOW SCHEMAS")
+        schema_names = [r[0] for r in result]
+        return schema_names

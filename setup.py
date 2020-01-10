@@ -29,12 +29,12 @@ test_requirements = [
 
 setup(
     name='sqlalchemy_dremio',
-    version='0.1.0',
+    version='0.2.0',
     description="An SQLAlchemy dialect for Dremio which simply wraps the PyODBC Dremio interface.",
     long_description=readme + '\n\n' + history,
-    author="Ajish George",
-    author_email='yell@aji.sh',
-    url='https://github.com/uhjish/sqlalchemy_dremio',
+    author="Ajish George, Naren",
+    author_email='yell@aji.sh, naren@dremio.com',
+    url='https://github.com/naren-dremio/sqlalchemy_dremio',
     packages=find_packages(include=['sqlalchemy_dremio']),
     entry_points={
         'sqlalchemy.dialects': [
