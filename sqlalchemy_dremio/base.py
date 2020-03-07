@@ -28,7 +28,7 @@ _type_map = {
     'date': types.DATE,
     'DATE': types.DATE,
     'float': types.FLOAT,
-    'FLOAT': types.FLOAT,    
+    'FLOAT': types.FLOAT,
     'decimal': types.DECIMAL,
     'DECIMAL': types.DECIMAL,
     'double': types.FLOAT,
@@ -56,7 +56,7 @@ class DremioExecutionContext(default.DefaultExecutionContext):
     pass
 
 
-class DremioCompiler(compiler.SQLCompiler): 
+class DremioCompiler(compiler.SQLCompiler):
     def visit_char_length_func(self, fn, **kw):
         return 'length{}'.format(self.function_argspec(fn, **kw))
 
@@ -101,54 +101,54 @@ class DremioDDLCompiler(compiler.DDLCompiler):
 
 class DremioIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = compiler.RESERVED_WORDS.copy()
-    dremio_reserved = {'abs', 'all', 'allocate', 'allow', 'alter', 'and', 'any', 'are', 'array', 
-    'array_max_cardinality', 'as', 'asensitivelo', 'asymmetric', 'at', 'atomic', 'authorization', 
+    dremio_reserved = {'abs', 'all', 'allocate', 'allow', 'alter', 'and', 'any', 'are', 'array',
+    'array_max_cardinality', 'as', 'asensitivelo', 'asymmetric', 'at', 'atomic', 'authorization',
     'avg', 'begin', 'begin_frame', 'begin_partition', 'between', 'bigint', 'binary', 'bit', 'blob',
     'boolean', 'both', 'by', 'call', 'called', 'cardinality', 'cascaded', 'case', 'cast', 'ceil',
-    'ceiling', 'char', 'char_length', 'character', 'character_length', 'check', 'classifier', 
-    'clob', 'close', 'coalesce', 'collate', 'collect', 'column', 'commit', 'condition', 'connect', 
-    'constraint', 'contains', 'convert', 'corr', 'corresponding', 'count', 'covar_pop', 
-    'covar_samp', 'create', 'cross', 'cube', 'cume_dist', 'current', 'current_catalog', 
-    'current_date', 'current_default_transform_group', 'current_path', 'current_role', 
-    'current_row', 'current_schema', 'current_time', 'current_timestamp', 
-    'current_transform_group_for_type', 'current_user', 'cursor', 'cycle', 'date', 'day', 
-    'deallocate', 'dec', 'decimal', 'declare', 'default', 'define', 'delete', 'dense_rank', 
+    'ceiling', 'char', 'char_length', 'character', 'character_length', 'check', 'classifier',
+    'clob', 'close', 'coalesce', 'collate', 'collect', 'column', 'commit', 'condition', 'connect',
+    'constraint', 'contains', 'convert', 'corr', 'corresponding', 'count', 'covar_pop',
+    'covar_samp', 'create', 'cross', 'cube', 'cume_dist', 'current', 'current_catalog',
+    'current_date', 'current_default_transform_group', 'current_path', 'current_role',
+    'current_row', 'current_schema', 'current_time', 'current_timestamp',
+    'current_transform_group_for_type', 'current_user', 'cursor', 'cycle', 'date', 'day',
+    'deallocate', 'dec', 'decimal', 'declare', 'default', 'define', 'delete', 'dense_rank',
     'deref', 'describe', 'deterministic', 'disallow', 'disconnect', 'distinct', 'double', 'drop',
     'dynamic', 'each', 'element', 'else', 'empty', 'end', 'end-exec', 'end_frame', 'end_partition',
     'equals', 'escape', 'every', 'except', 'exec', 'execute', 'exists', 'exp', 'explain', 'extend',
-    'external', 'extract', 'false', 'fetch', 'filter', 'first_value', 'float', 'floor', 'for', 
+    'external', 'extract', 'false', 'fetch', 'filter', 'first_value', 'float', 'floor', 'for',
     'foreign', 'frame_row', 'free', 'from', 'full', 'function', 'fusion', 'get', 'global', 'grant',
-    'group', 'grouping', 'groups', 'having', 'hold', 'hour', 'identity', 'import', 'in', 
-    'indicator', 'initial', 'inner', 'inout', 'insensitive', 'insert', 'int', 'integer', 
-    'intersect', 'intersection', 'interval', 'into', 'is', 'join', 'lag', 'language', 'large', 
-    'last_value', 'lateral', 'lead', 'leading', 'left', 'like', 'like_regex', 'limit', 'ln', 
-    'local', 'localtime', 'localtimestamp', 'lower', 'match', 'matches', 'match_number', 
-    'match_recognize', 'max', 'measures', 'member', 'merge', 'method', 'min', 'minute', 'mod', 
-    'modifies', 'module', 'month', 'more', 'multiset', 'national', 'natural', 'nchar', 'nclob', 
-    'new', 'next', 'no', 'none', 'normalize', 'not', 'nth_value', 'ntile', 'null', 'nullif', 
-    'numeric', 'occurrences_regex', 'octet_length', 'of', 'offset', 'old', 'omit', 'on', 'one', 
-    'only', 'open', 'or', 'order', 'out', 'outer', 'over', 'overlaps', 'overlay', 'parameter', 
+    'group', 'grouping', 'groups', 'having', 'hold', 'hour', 'identity', 'import', 'in',
+    'indicator', 'initial', 'inner', 'inout', 'insensitive', 'insert', 'int', 'integer',
+    'intersect', 'intersection', 'interval', 'into', 'is', 'join', 'lag', 'language', 'large',
+    'last_value', 'lateral', 'lead', 'leading', 'left', 'like', 'like_regex', 'limit', 'ln',
+    'local', 'localtime', 'localtimestamp', 'lower', 'match', 'matches', 'match_number',
+    'match_recognize', 'max', 'measures', 'member', 'merge', 'method', 'min', 'minute', 'mod',
+    'modifies', 'module', 'month', 'more', 'multiset', 'national', 'natural', 'nchar', 'nclob',
+    'new', 'next', 'no', 'none', 'normalize', 'not', 'nth_value', 'ntile', 'null', 'nullif',
+    'numeric', 'occurrences_regex', 'octet_length', 'of', 'offset', 'old', 'omit', 'on', 'one',
+    'only', 'open', 'or', 'order', 'out', 'outer', 'over', 'overlaps', 'overlay', 'parameter',
     'partition', 'pattern', 'per', 'percent', 'percentile_cont', 'percentile_disc', 'percent_rank',
     'period', 'permute', 'portion', 'position', 'position_regex', 'power', 'precedes', 'precision',
-    'prepare', 'prev', 'primary', 'procedure', 'range', 'rank', 'reads', 'real', 'recursive', 
-    'ref', 'references', 'referencing', 'regr_avgx', 'regr_avgy', 'regr_count', 'regr_intercept', 
-    'regr_r2', 'regr_slope', 'regr_sxx', 'regr_sxy', 'regr_syy', 'release', 'reset', 'result', 
-    'return', 'returns', 'revoke', 'right', 'rollback', 'rollup', 'row', 'row_number', 'rows', 
-    'running', 'savepoint', 'scope', 'scroll', 'search', 'second', 'seek', 'select', 'sensitive', 
-    'session_user', 'set', 'minus', 'show', 'similar', 'skip', 'smallint', 'some', 'specific', 
-    'specifictype', 'sql', 'sqlexception', 'sqlstate', 'sqlwarning', 'sqrt', 'start', 'static', 
+    'prepare', 'prev', 'primary', 'procedure', 'range', 'rank', 'reads', 'real', 'recursive',
+    'ref', 'references', 'referencing', 'regr_avgx', 'regr_avgy', 'regr_count', 'regr_intercept',
+    'regr_r2', 'regr_slope', 'regr_sxx', 'regr_sxy', 'regr_syy', 'release', 'reset', 'result',
+    'return', 'returns', 'revoke', 'right', 'rollback', 'rollup', 'row', 'row_number', 'rows',
+    'running', 'savepoint', 'scope', 'scroll', 'search', 'second', 'seek', 'select', 'sensitive',
+    'session_user', 'set', 'minus', 'show', 'similar', 'skip', 'smallint', 'some', 'specific',
+    'specifictype', 'sql', 'sqlexception', 'sqlstate', 'sqlwarning', 'sqrt', 'start', 'static',
     'stddev_pop', 'stddev_samp', 'stream', 'submultiset', 'subset', 'substring', 'substring_regex',
     'succeeds', 'sum', 'symmetric', 'system', 'system_time', 'system_user', 'table', 'tablesample',
-    'then', 'time', 'timestamp', 'timezone_hour', 'timezone_minute', 'tinyint', 'to', 'trailing', 
-    'translate', 'translate_regex', 'translation', 'treat', 'trigger', 'trim', 'trim_array', 
-    'true', 'truncate', 'uescape', 'union', 'unique', 'unknown', 'unnest', 'update', 'upper', 
+    'then', 'time', 'timestamp', 'timezone_hour', 'timezone_minute', 'tinyint', 'to', 'trailing',
+    'translate', 'translate_regex', 'translation', 'treat', 'trigger', 'trim', 'trim_array',
+    'true', 'truncate', 'uescape', 'union', 'unique', 'unknown', 'unnest', 'update', 'upper',
     'upsert', 'user', 'using', 'value', 'values', 'value_of', 'var_pop', 'var_samp', 'varbinary',
-    'varchar', 'varying', 'versioning', 'when', 'whenever', 'where', 'width_bucket', 'window', 
+    'varchar', 'varying', 'versioning', 'when', 'whenever', 'where', 'width_bucket', 'window',
     'with', 'within', 'without', 'year'}
-    
+
     dremio_unique = dremio_reserved - reserved_words
     reserved_words.update(list(dremio_unique))
-    
+
     def __init__(self, dialect):
         super(DremioIdentifierPreparer, self).\
                 __init__(dialect, initial_quote='"', final_quote='"')
@@ -175,14 +175,14 @@ class DremioDialect(default.DefaultDialect):
 
         if 'autocommit' not in engine_params:
             cparams['autocommit'] = 1
-        
+
         clean_args = engine_args
-        
+
         dsn_regex = re.compile("dsn=.*", re.IGNORECASE)
         if list(filter(dsn_regex.match, engine_args)):
             extra_params_regex = re.compile('(host=|port=|schema=).*', re.IGNORECASE)
             clean_args = [arg for arg in engine_args if not extra_params_regex.match(arg)]
-        
+
         auth_regex = re.compile('authenticationtype=.*', re.IGNORECASE)
         cnx_regex = re.compile('connectiontype=.*', re.IGNORECASE)
         trusted_regex = re.compile('trusted_connection=yes', re.IGNORECASE)
@@ -213,7 +213,7 @@ class DremioDialect(default.DefaultDialect):
 
     def get_columns(self, connection, table_name, schema, **kw):
 
-        q = "DESCRIBE \"{0}\".\"{1}\"".format(schema,table_name)
+        q = "DESCRIBE \"{0}\".\"{1}\"".format(schema, table_name)
         cursor = connection.execute(q)
         result = []
         for col in cursor:
@@ -225,7 +225,7 @@ class DremioDialect(default.DefaultDialect):
                 "type": ctype,
                 "default": None,
                 "comment": None,
-                "nullable": True 
+                "nullable": True
             }
             result.append(column)
         return(result)
@@ -233,10 +233,12 @@ class DremioDialect(default.DefaultDialect):
     @reflection.cache
     def get_table_names(self, connection, schema, **kw):
         sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA."TABLES"'
+        params = {}
         if schema is not None:
-            sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.\"TABLES\" WHERE TABLE_SCHEMA = '" + schema + "'"
+            params["schema"] = schema
+            sql += " WHERE TABLE_SCHEMA = :schema"
 
-        result = connection.execute(sql)
+        result = connection.execute(sql, **params)
         table_names = [r[0] for r in result]
         return table_names
 
